@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生活助手平台 · P20250308013 李嘉欣</title>
+<style>
+  :root{
+    --blue:#1f6fe5; --blue-d:#1557b8; --blue-l:#eaf3ff;
+    --bg:#f4f8ff; --card:#fff; --text:#1c2b3a; --muted:#6b7c8d;
+    --green:#18a058; --red:#d9534f; --line:#e3ecf5;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:var(--bg);color:var(--text)}
+  header{background:linear-gradient(135deg,#1f6fe5,#3d9bff);color:#fff;padding:22px 28px}
+  header h1{font-size:24px;letter-spacing:1px}
+  header p{margin-top:6px;opacity:.9;font-size:14px}
+  nav{background:#fff;display:flex;flex-wrap:wrap;gap:8px;padding:12px 28px;box-shadow:0 2px 8px rgba(31,111,229,.08)}
+  nav a{color:var(--blue);text-decoration:none;font-size:14px;padding:6px 14px;border-radius:18px;background:var(--blue-l)}
+  nav a:hover{background:var(--blue);color:#fff}
+  main{max-width:1100px;margin:24px auto;padding:0 20px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+  .card{background:var(--card);border-radius:16px;padding:22px;box-shadow:0 4px 16px rgba(31,111,229,.08)}
+  .card h2{font-size:18px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .card .desc{font-size:13px;color:var(--muted);margin-bottom:16px}
+  .tag{font-size:12px;background:var(--blue-l);color:var(--blue);border-radius:6px;padding:2px 8px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  input,select{flex:1;min-width:140px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;outline:none}
+  input:focus,select:focus{border-color:var(--blue)}
+  button{background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-size:14px;cursor:pointer}
+  button:hover{background:var(--blue-d)}
+  button.ghost{background:var(--blue-l);color:var(--blue)}
+  .result{background:var(--bg);border-radius:12px;padding:14px;min-height:60px;font-size:14px;line-height:1.7}
+  .result .loading{color:var(--muted)}
+  .result ul{padding-left:18px}
+  .result li{margin:4px 0}
+  .kv{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
+  .kv div b{color:var(--blue)}
+  .badge{display:inline-block;font-size:12px;border-radius:6px;padding:2px 8px;margin-right:6px}
+  .ok{color:var(--green)} .err{color:var(--red)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:center}
+  th{color:var(--muted)}
+  footer{text-align:center;color:var(--muted);font-size:13px;padding:28px}
+  .chat-box{display:flex;flex-direction:column;gap:12px}
+  .bubble{max-width:85%;padding:10px 14px;border-radius:12px;line-height:1.6}
+  .me{align-self:flex-end;background:var(--blue);color:#fff}
+  .ai{align-self:flex-start;background:var(--blue-l);color:var(--text)}
+  .full{grid-column:1/-1}
+  .meta{font-size:12px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🌤️ 生活助手平台</h1>
+  <p>接口测试作业 · 学号 P20250308013 · 姓名 李嘉欣 · 集成天气 / 归属地 / 油价 / 黄历 / 新闻 / AI 问答共 6 项 API 功能</p>
+</header>
+<nav>
+  <a href="#weather">天气查询</a>
+  <a href="#phone">手机归属地</a>
+  <a href="#oil">今日油价</a>
+  <a href="#almanac">黄历查询</a>
+  <a href="#news">当日新闻</a>
+  <a href="#chat">AI 问答</a>
+</nav>
+
+<main>
+<div class="grid">
+
+  <!-- 1 天气 -->
+  <section class="card" id="weather">
+    <h2>🌡️ 全国天气查询 <span class="tag">GET</span></h2>
+    <p class="desc">输入任意城市（中文或英文），查询实时天气、温度、体感与湿度。</p>
+    <div class="row">
+      <input id="weatherCity" value="江门" placeholder="例如：北京 / Guangzhou">
+      <button onclick="queryWeather()">查询天气</button>
+    </div>
+    <div class="result" id="weatherResult"><span class="loading">输入城市后点击查询…</span></div>
+  </section>
+
+  <!-- 2 归属地 -->
+  <section class="card" id="phone">
+    <h2>📱 手机归属地 <span class="tag">GET</span></h2>
+    <p class="desc">输入 11 位手机号，查询号码归属省份、城市与运营商。</p>
+    <div class="row">
+      <input id="phoneNum" value="17676860190" placeholder="11 位手机号" maxlength="11">
+      <button onclick="queryPhone()">查询归属地</button>
+    </div>
+    <div class="result" id="phoneResult"><span class="loading">输入手机号后点击查询…</span></div>
+  </section>
+
+  <!-- 3 油价 -->
+  <section class="card" id="oil">
+    <h2>⛽ 今日油价 <span class="tag">GET</span></h2>
+    <p class="desc">查询全国各省 92 / 95 / 98 号汽油及 0 号柴油今日零售价。</p>
+    <div class="row">
+      <select id="oilProvince"></select>
+      <button onclick="queryOil()">查询油价</button>
+    </div>
+    <div class="result" id="oilResult"><span class="loading">点击按钮加载今日油价…</span></div>
+  </section>
+
+  <!-- 4 黄历 -->
+  <section class="card" id="almanac">
+    <h2>📅 黄历查询 <span class="tag">GET</span></h2>
+    <p class="desc">选择公历日期，查看农历、干支、生肖、二十八宿与吉神凶煞。</p>
+    <div class="row">
+      <input type="date" id="almanacDate" value="2026-11-20">
+      <button onclick="queryAlmanac()">查询黄历</button>
+    </div>
+    <div class="result" id="almanacResult"><span class="loading">选择日期后点击查询…</span></div>
+  </section>
+
+  <!-- 5 新闻 -->
+  <section class="card full" id="news">
+    <h2>📰 当日新闻 <span class="tag">GET</span></h2>
+    <p class="desc">获取当天 60 秒新闻简报（开放数据接口）。</p>
+    <div class="row">
+      <button onclick="queryNews()">刷新新闻</button>
+    </div>
+    <div class="result" id="newsResult"><span class="loading">点击按钮加载今日新闻…</span></div>
+  </section>
+
+  <!-- 6 AI 问答 -->
+  <section class="card full" id="chat">
+    <h2>🤖 AI 大模型问答 <span class="tag">POST</span></h2>
+    <p class="desc">接入智谱 GLM-4.7-Flash 免费大模型，输入问题即可获得中文回答。</p>
+    <div class="chat-box" id="chatBox">
+      <div class="bubble ai">你好，我是 AI 助手，可以问我天气、生活常识或学习问题～</div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <input id="chatInput" placeholder="输入你的问题，回车发送" onkeydown="if(event.key==='Enter')queryChat()">
+      <button onclick="queryChat()">发送</button>
+    </div>
+  </section>
+
+</div>
+</main>
+
+<footer>本页面为接口测试课程作业 · 数据来源于各公开免费 API · P20250308013 李嘉欣</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+
+async function getJSON(url){
+  const r = await fetch(url);
+  const text = await r.text();
+  let j; try{ j = JSON.parse(text); }catch(e){ j = {raw:text}; }
+  return {status:r.status, json:j};
+}
+
+function esc(s){ return String(s??'').replace(/[<>&]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+
+// 1 天气
+async function queryWeather(){
+  const city = $('weatherCity').value.trim() || 'Jiangmen';
+  $('weatherResult').innerHTML = '<span class="loading">查询中…</span>';
+  try{
+    const {status, json} = await getJSON('/api/weather?city='+encodeURIComponent(city));
+    if(status!==200 || !json.current_condition){ throw new Error('未获取到天气数据'); }
+    const c = json.current_condition[0];
+    const area = json.nearest_area ? json.nearest_area[0] : {};
+    const region = area.region ? area.region[0].value : city;
+    $('weatherResult').innerHTML = `
+      <div class="kv">
+        <div>城市：<b>${esc(region)}</b></div>
+        <div>温度：<b>${esc(c.temp_C)}℃</b></div>
+        <div>体感：<b>${esc(c.FeelsLikeC)}℃</b></div>
+        <div>湿度：<b>${esc(c.humidity)}%</b></div>
+        <div>天气：<b>${esc(c.weatherDesc?c.weatherDesc[0].value:'-')}</b></div>
+        <div>风向：<b>${esc(c.winddir16Point)} ${esc(c.windspeedKmph)}km/h</b></div>
+      </div>`;
+  }catch(e){
+    $('weatherResult').innerHTML = '<span class="err">查询失败：'+esc(e.message)+'</span>';
+  }
+}
+
+// 2 归属地
+async function queryPhone(){
+  const num = $('phoneNum').value.trim();
+  $('phoneResult').innerHTML = '<span class="loading">查询中…</span>';
+  try{
+    const {status, json} = await getJSON('/api/phone?number='+encodeURIComponent(num));
+    if(json.code!==0){ throw new Error(json.message||'号码无归属地信息'); }
+    const d = json.data;
+    $('phoneResult').innerHTML = `
+      <div class="kv">
+        <div>手机号：<b>${esc(num)}</b></div>
+        <div>省份：<b>${esc(d.province)||'-'}</b></div>
+        <div>城市：<b>${esc(d.city)||'-'}</b></div>
+        <div>运营商：<b>${esc(d.sp)||'-'}</b></div>
+      </div>`;
+  }catch(e){
+    $('phoneResult').innerHTML = '<span class="err">查询失败：'+esc(e.message)+'</span>';
+  }
+}
+
+// 3 油价
+let oilList = [];
+async function queryOil(init){
+  $('oilResult').innerHTML = '<span class="loading">加载中…</span>';
+  try{
+    const {json} = await getJSON('/api/oil');
+    if(json.status!==1){ throw new Error('油价数据异常'); }
+    oilList = json.data.list || [];
+    if(!$('oilProvince').options.length){
+      oilList.forEach(p=>{ const o=document.createElement('option'); o.value=p.name; o.textContent=p.name; $('oilProvince').appendChild(o); });
+    }
+    renderOil($('oilProvince').value || oilList[0].name);
+    if(init) $('oilResult').innerHTML = '<span class="loading">已加载全国油价，请选择省份查看。</span>';
+  }catch(e){
+    $('oilResult').innerHTML = '<span class="err">加载失败：'+esc(e.message)+'</span>';
+  }
+}
+function renderOil(name){
+  const p = oilList.find(x=>x.name===name) || oilList[0];
+  if(!p){ return; }
+  $('oilResult').innerHTML = `
+    <table>
+      <tr><th>地区</th><th>92号汽油</th><th>95号汽油</th><th>98号汽油</th><th>0号柴油</th></tr>
+      <tr><td><b>${esc(p.name)}</b></td><td>${esc(p.p92)}</td><td>${esc(p.p95)}</td><td>${esc(p.p98)}</td><td>${esc(p.p0)}</td></tr>
+    </table>
+    <div class="meta">数据更新日期：${esc(arguments[1]||'')}</div>`;
+}
+$('oilProvince').addEventListener('change', ()=>renderOil($('oilProvince').value));
+
+// 4 黄历
+async function queryAlmanac(){
+  const date = $('almanacDate').value;
+  $('almanacResult').innerHTML = '<span class="loading">查询中…</span>';
+  try{
+    const {json} = await getJSON('/api/almanac?date='+encodeURIComponent(date));
+    const lunar = json.lunar||{}, dp = json.day_pillar||{}, folk = json.folk||{};
+    const clash = json.clash||{};
+    const yi = (json.auspicious_for_yi||[]).join('、');
+    const ji = (json.avoid_ji||[]).join('、');
+    const js = (json.jishen_xiongsha||{}).auspicious||[];
+    const xs = (json.jishen_xiongsha||{}).caution||[];
+    $('almanacResult').innerHTML = `
+      <div class="kv">
+        <div>公历：<b>${esc(json.date)}</b></div>
+        <div>农历：<b>${esc(lunar.month)}月${esc(lunar.day)}</b></div>
+        <div>年柱：<b>${esc(lunar.year_gz_cn)}</b></div>
+        <div>日柱：<b>${esc(dp.stem_cn)}${esc(dp.branch_cn)}</b></div>
+        <div>值日：<b>${esc(json.day_officer_zhi_shen?json.day_officer_zhi_shen.cn:'-')}</b></div>
+        <div>二十八宿：<b>${esc(json.xiu_28?json.xiu_28.cn:'-')}</b></div>
+        <div>冲：<b>冲${esc(clash.branch_cn||'')}${esc(clash.animal||'')}</b></div>
+        <div>纳音：<b>${esc(folk.nayin?folk.nayin[0]:'-')}</b></div>
+      </div>
+      <p style="margin-top:10px"><span class="badge" style="background:#e8f7ee;color:#18a058">宜</span>${esc(yi||'-')}</p>
+      <p><span class="badge" style="background:#fdeceb;color:#d9534f">忌</span>${esc(ji||'-')}</p>
+      <div class="meta">吉神：${esc(js.join('、')||'-')}　凶煞：${esc(xs.join('、')||'-')}</div>
+      <div class="meta">数据来源：12Zodiacs.com API</div>`;
+  }catch(e){
+    $('almanacResult').innerHTML = '<span class="err">查询失败：'+esc(e.message)+'</span>';
+  }
+}
+
+// 5 新闻
+async function queryNews(){
+  $('newsResult').innerHTML = '<span class="loading">加载中…</span>';
+  try{
+    const {json} = await getJSON('/api/news');
+    if(json.code!==200){ throw new Error('新闻数据异常'); }
+    const news = json.data.news||[];
+    $('newsResult').innerHTML = `
+      <div class="meta">日期：${esc(json.data.date)}</div>
+      <ul>${news.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`;
+  }catch(e){
+    $('newsResult').innerHTML = '<span class="err">加载失败：'+esc(e.message)+'</span>';
+  }
+}
+
+// 6 AI 问答
+async function queryChat(){
+  const input = $('chatInput');
+  const q = input.value.trim();
+  if(!q) return;
+  const box = $('chatBox');
+  box.insertAdjacentHTML('beforeend', `<div class="bubble me">${esc(q)}</div>`);
+  input.value = '';
+  const wait = document.createElement('div');
+  wait.className='bubble ai'; wait.textContent='思考中…'; box.appendChild(wait);
+  try{
+    const r = await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})});
+    const json = await r.json();
+    const content = json.choices&&json.choices[0]&&json.choices[0].message
+      ? (json.choices[0].message.content||json.choices[0].message.reasoning_content||'') : '';
+    wait.textContent = content || ('返回内容为空：'+esc(json.message||'模型繁忙，请稍后重试'));
+  }catch(e){
+    wait.textContent = '请求失败：'+esc(e.message);
+  }
+}
+
+// 初次自动加载基础数据
+queryOil(true);
+</script>
+</body>
+</html>

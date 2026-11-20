@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>预览截图 · P20250308013 李嘉欣</title>
+<style>
+  :root{--blue:#1f6fe5;--blue-d:#1557b8;--blue-l:#eaf3ff;--bg:#f4f8ff;--card:#fff;--text:#1c2b3a;--muted:#6b7c8d;--green:#18a058;--red:#d9534f;--line:#e3ecf5;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:var(--bg);color:var(--text);padding:24px}
+  header{background:linear-gradient(135deg,#1f6fe5,#3d9bff);color:#fff;padding:22px 28px;border-radius:16px;margin-bottom:20px}
+  header h1{font-size:24px} header p{margin-top:6px;opacity:.9;font-size:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+  .card{background:var(--card);border-radius:16px;padding:22px;box-shadow:0 4px 16px rgba(31,111,229,.08)}
+  .card h2{font-size:18px;margin-bottom:6px}
+  .card .desc{font-size:13px;color:var(--muted);margin-bottom:16px}
+  .tag{font-size:12px;background:var(--blue-l);color:var(--blue);border-radius:6px;padding:2px 8px;margin-left:6px}
+  .result{background:var(--bg);border-radius:12px;padding:14px;font-size:14px;line-height:1.7}
+  .result .loading{color:var(--muted)}
+  .result ul{padding-left:18px} .result li{margin:4px 0}
+  .kv{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
+  .kv div b{color:var(--blue)}
+  .badge{display:inline-block;font-size:12px;border-radius:6px;padding:2px 8px;margin-right:6px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:center}
+  th{color:var(--muted)}
+  .full{grid-column:1/-1}
+  .meta{font-size:12px;color:var(--muted);margin-top:8px}
+  .bubble{max-width:85%;padding:10px 14px;border-radius:12px;line-height:1.6}
+  .ai{background:var(--blue-l)}
+</style>
+</head>
+<body>
+<header>
+  <h1>🌤️ 生活助手平台（接口测试预览）</h1>
+  <p>学号 P20250308013 · 姓名 李嘉欣 · 集成天气 / 归属地 / 油价 / 黄历 / 新闻 / AI 问答共 6 项 API 功能</p>
+</header>
+<div class="grid">
+  <section class="card"><h2>🌡️ 全国天气查询<span class="tag">GET</span></h2><p class="desc">输入任意城市查询实时天气、温度、体感与湿度。</p><div class="result" id="w"><span class="loading">加载中…</span></div></section>
+  <section class="card"><h2>📱 手机归属地<span class="tag">GET</span></h2><p class="desc">输入 11 位手机号查询归属省份、城市与运营商。</p><div class="result" id="p"><span class="loading">加载中…</span></div></section>
+  <section class="card"><h2>⛽ 今日油价<span class="tag">GET</span></h2><p class="desc">查询各省 92/95/98 号汽油及 0 号柴油今日零售价。</p><div class="result" id="o"><span class="loading">加载中…</span></div></section>
+  <section class="card"><h2>📅 黄历查询<span class="tag">GET</span></h2><p class="desc">查看农历、干支、二十八宿与吉神凶煞。</p><div class="result" id="a"><span class="loading">加载中…</span></div></section>
+  <section class="card full"><h2>📰 当日新闻<span class="tag">GET</span></h2><p class="desc">获取当天 60 秒新闻简报。</p><div class="result" id="n"><span class="loading">加载中…</span></div></section>
+  <section class="card full"><h2>🤖 AI 大模型问答<span class="tag">POST</span></h2><p class="desc">接入智谱 GLM-4.7-Flash 免费大模型。</p><div class="result" id="c"><span class="loading">加载中…</span></div></section>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+async function g(u){const r=await fetch(u);return r.json();}
+function esc(s){return String(s??'').replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));}
+
+(async()=>{
+  try{const j=await g('/api/weather?city=江门');const c=j.current_condition[0];const ar=j.nearest_area[0];
+    $('w').innerHTML=`<div class="kv"><div>城市：<b>${esc(ar.region[0].value)}</b></div><div>温度：<b>${esc(c.temp_C)}℃</b></div><div>体感：<b>${esc(c.FeelsLikeC)}℃</b></div><div>湿度：<b>${esc(c.humidity)}%</b></div><div>天气：<b>${esc(c.weatherDesc[0].value)}</b></div><div>风向：<b>${esc(c.winddir16Point)} ${esc(c.windspeedKmph)}km/h</b></div></div>`;
+  }catch(e){$('w').innerHTML='<span class="err">加载失败</span>';}
+
+  try{const j=await g('/api/phone?number=17676860190');const d=j.data;
+    $('p').innerHTML=`<div class="kv"><div>手机号：<b>17676860190</b></div><div>省份：<b>${esc(d.province)}</b></div><div>城市：<b>${esc(d.city)}</b></div><div>运营商：<b>${esc(d.sp)}</b></div></div>`;
+  }catch(e){$('p').innerHTML='<span class="err">加载失败</span>';}
+
+  try{const j=await g('/api/oil');const p=j.data.list.find(x=>x.name==='广东')||j.data.list[0];
+    $('o').innerHTML=`<table><tr><th>地区</th><th>92号</th><th>95号</th><th>98号</th><th>0号柴油</th></tr><tr><td><b>${esc(p.name)}</b></td><td>${esc(p.p92)}</td><td>${esc(p.p95)}</td><td>${esc(p.p98)}</td><td>${esc(p.p0)}</td></tr></table><div class="meta">更新日期：${esc(j.data.date)}　下次调价：${esc(j.data.next_update_time)}</div>`;
+  }catch(e){$('o').innerHTML='<span class="err">加载失败</span>';}
+
+  try{const j=await g('/api/almanac?date=2026-11-20');const l=j.lunar,dp=j.day_pillar,f=j.folk,cl=j.clash;
+    $('a').innerHTML=`<div class="kv"><div>公历：<b>${esc(j.date)}</b></div><div>农历：<b>${esc(l.month)}月${esc(l.day)}</b></div><div>年柱：<b>${esc(l.year_gz_cn)}</b></div><div>日柱：<b>${esc(dp.stem_cn)}${esc(dp.branch_cn)}</b></div><div>值日：<b>${esc(j.day_officer_zhi_shen.cn)}</b></div><div>二十八宿：<b>${esc(j.xiu_28.cn)}</b></div></div><div class="meta">吉神：${esc((j.jishen_xiongsha.auspicious||[]).join('、'))}　凶煞：${esc((j.jishen_xiongsha.caution||[]).join('、'))}</div>`;
+  }catch(e){$('a').innerHTML='<span class="err">加载失败</span>';}
+
+  try{const j=await g('/api/news');const news=j.data.news||[];
+    $('n').innerHTML=`<div class="meta">日期：${esc(j.data.date)}</div><ul>${news.slice(0,8).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+  }catch(e){$('n').innerHTML='<span class="err">加载失败</span>';}
+
+  try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:'用一句话介绍你自己'})});const j=await r.json();
+    const ct=j.choices&&j.choices[0]?j.choices[0].message.content||j.choices[0].message.reasoning_content||'':'';
+    $('c').innerHTML=`<div class="bubble ai">${esc(ct||'模型繁忙，请稍后重试')}</div>`;
+  }catch(e){$('c').innerHTML='<span class="err">加载失败</span>';}})();
+</script>
+</body>
+</html>

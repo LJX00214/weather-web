@@ -1,0 +1,2 @@
+# 本项目仅使用 Python 标准库，无第三方依赖。
+# 保留空 requirements.txt 以便云平台（Render / Railway 等）识别 Python 运行时。
