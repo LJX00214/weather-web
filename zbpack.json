@@ -1,0 +1,6 @@
+{
+  "python": {
+    "entry": "server.py",
+    "package_manager": "pip"
+  }
+}
