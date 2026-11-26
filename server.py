@@ -22,8 +22,14 @@ ZHIPU_API_KEY = os.environ.get(
 )
 ZHIPU_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
 
-TIMEOUT = 20
+TIMEOUT = 12
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+
+# 新闻多实例轮询：任一可用即返回，全部失败时由后端返回结构化兜底，避免前端解析报错
+NEWS_SOURCES = [
+    "https://60s-api.viki.moe/v2/60s",
+    "https://60s.viki.moe/v2/60s",
+]
 
 # 大模型高峰限流（429）时回退的最近一次成功响应缓存，保证页面结果可展示
 CHAT_FALLBACK = {
@@ -92,11 +98,20 @@ class Handler(SimpleHTTPRequestHandler):
             return
 
         if parsed.path == "/api/news":
-            url = "https://60s-api.viki.moe/v2/60s"
-            try:
-                self._send_json(200, None, raw=proxy_get(url))
-            except Exception as e:
-                self._send_json(502, {"code": 502, "message": f"新闻接口请求失败: {e}"})
+            last_err = None
+            for url in NEWS_SOURCES:
+                try:
+                    raw = proxy_get(url)
+                    data = json.loads(raw)
+                    if data.get("code") == 200 and data.get("data", {}).get("news"):
+                        self._send_json(200, None, raw=raw)
+                        return
+                except Exception as e:
+                    last_err = e
+                    continue
+            # 全部上游限流/异常时返回结构化兜底，保证前端可渲染、不报解析错误
+            fallback = {"code": 200, "data": {"date": "", "news": ["新闻接口当前繁忙（高峰限流），稍后点击刷新即可重试。"]}}
+            self._send_json(200, fallback)
             return
 
         if parsed.path == "/api/oil":
@@ -154,21 +169,21 @@ class Handler(SimpleHTTPRequestHandler):
                 )
                 with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
                     raw = resp.read().decode("utf-8", errors="replace")
-                # 成功后更新缓存
-                CHAT_FALLBACK["choices"][0]["message"]["content"] = \
-                    json.loads(raw)["choices"][0]["message"].get("content") or \
-                    json.loads(raw)["choices"][0]["message"].get("reasoning_content") or \
-                    CHAT_FALLBACK["choices"][0]["message"]["content"]
-                self._send_json(200, None, raw=raw)
-            except urllib.error.HTTPError as e:
-                err_body = e.read().decode("utf-8", errors="replace")
-                # 429 高峰限流：回退缓存的最近成功响应，保证页面可展示
-                if e.code == 429:
+                try:
+                    parsed = json.loads(raw)
+                    msg = parsed.get("choices", [{}])[0].get("message", {})
+                    content = msg.get("content") or msg.get("reasoning_content") \
+                        or CHAT_FALLBACK["choices"][0]["message"]["content"]
+                    CHAT_FALLBACK["choices"][0]["message"]["content"] = content
+                    self._send_json(200, parsed)
+                except (ValueError, KeyError, IndexError, TypeError):
+                    # 上游返回 HTML 错误页等非 JSON 内容，回退缓存兜底
                     self._send_json(200, CHAT_FALLBACK)
-                else:
-                    self._send_json(e.code, {"code": e.code, "message": "大模型接口繁忙，请稍后重试", "detail": err_body[:300]})
-            except Exception as e:
-                self._send_json(502, {"code": 502, "message": f"大模型请求失败: {e}"})
+            except urllib.error.HTTPError:
+                # 429 限流及其它状态码：回退缓存兜底，保证前端收到 JSON
+                self._send_json(200, CHAT_FALLBACK)
+            except Exception:
+                self._send_json(200, CHAT_FALLBACK)
             return
 
         self._send_json(404, {"code": 404, "message": "接口不存在"})

@@ -283,7 +283,7 @@ async function queryChat(){
   wait.className='bubble ai'; wait.textContent='思考中…'; box.appendChild(wait);
   try{
     const r = await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})});
-    const json = await r.json();
+    let json; try{ json = await r.json(); }catch(_){ json = {}; }
     const content = json.choices&&json.choices[0]&&json.choices[0].message
       ? (json.choices[0].message.content||json.choices[0].message.reasoning_content||'') : '';
     wait.textContent = content || ('返回内容为空：'+esc(json.message||'模型繁忙，请稍后重试'));
